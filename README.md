@@ -1,36 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Cycles
 
-## Getting Started
+A productivity app based on Sebastian Marshall's Work Cycles system.
 
-First, run the development server:
+**This is a placeholder app** to set up Vercel + Neon integration. The full app will be built by an autonomous coding agent.
+
+## Step 1: Push to GitHub
+
+Replace `YOUR_GITHUB_USERNAME` with your actual GitHub username:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd /users/guruprasadpuranik/dev/cycles/app
+git add .
+git commit -m "Initial commit: Cycles placeholder"
+git branch -M main
+git remote add origin https://github.com/YOUR_GITHUB_USERNAME/cycles.git
+git push -u origin main
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Step 2: Deploy to Vercel
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Go to https://vercel.com/new
+2. Import the `cycles` repository from GitHub
+3. Deploy with default settings
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Step 3: Add Neon Database
 
-## Learn More
+1. In your Vercel project → **Storage** tab
+2. Click **Add Database** → Select **Neon**
+3. Create a new Neon database
+4. Go to **Settings** → **Environment Variables**
+5. Copy the `DATABASE_URL` value
 
-To learn more about Next.js, take a look at the following resources:
+## Step 4: Give to Autonomous Agent
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Once you have the `DATABASE_URL`, provide it to the autonomous coding agent along with the implementation plan at:
+- `/users/guruprasadpuranik/dev/cycles/docs/implementation-plan.md`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The agent will rebuild this into the full Cycles application.
