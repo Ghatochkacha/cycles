@@ -1,0 +1,99 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String
+  name          String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+}
+
+model Session {
+  id                    String    @id @default(uuid())
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startTime             DateTime
+  cycleDurationMinutes  Int       // e.g., 30
+  breakDurationMinutes  Int       // e.g., 10
+  totalCycles           Int       // e.g., 3
+  status                SessionStatus
+  preparationAnswers    Json      // JSONB field
+  debriefAnswers        Json?     // JSONB field
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  completedAt           DateTime?
+  cycles                Cycle[]
+}
+
+enum SessionStatus {
+  preparing
+  in_progress
+  completed
+  abandoned
+}
+
+model Cycle {
+  id                 String       @id @default(uuid())
+  sessionId          String
+  session            Session      @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  cycleNumber        Int          // 1-indexed
+  scheduledStartTime DateTime
+  actualStartTime    DateTime?
+  actualEndTime      DateTime?
+  status             CycleStatus
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  plan               CyclePlan?
+  review             CycleReview?
+}
+
+enum CycleStatus {
+  pending
+  in_progress
+  completed
+  skipped
+}
+
+model CyclePlan {
+  id           String      @id @default(uuid())
+  cycleId      String      @unique
+  cycle        Cycle       @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+  goal         String      @db.Text
+  howToStart   String      @db.Text
+  hazards      String?     @db.Text
+  energyLevel  EnergyLevel
+  moraleLevel  MoraleLevel
+  createdAt    DateTime    @default(now())
+}
+
+enum EnergyLevel {
+  high
+  medium
+  low
+}
+
+enum MoraleLevel {
+  high
+  medium
+  low
+}
+
+model CycleReview {
+  id              String   @id @default(uuid())
+  cycleId         String   @unique
+  cycle           Cycle    @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+  completedTarget Boolean
+  noteworthy      String?  @db.Text
+  distractions    String?  @db.Text
+  improvements    String?  @db.Text
+  createdAt       DateTime @default(now())
+}

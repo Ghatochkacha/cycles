@@ -1,20 +1,28 @@
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
-      <main className="flex flex-col items-center gap-8 text-center px-8">
-        <h1 className="text-6xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
-          Cycles
-        </h1>
-        <p className="text-xl text-slate-600 dark:text-slate-400 max-w-md">
-          A productivity system to structure your focused work sessions.
-        </p>
-        <div className="mt-4 px-6 py-3 bg-slate-900 dark:bg-slate-100 text-slate-50 dark:text-slate-900 rounded-full text-sm font-medium">
-          Coming Soon
+    <main className="flex min-h-screen flex-col items-center justify-center p-24">
+      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
+        <h1 className="text-4xl font-bold">Cycles</h1>
+        <div className="flex gap-4">
+          <Link href="/auth/login">
+            <Button variant="outline">Login</Button>
+          </Link>
+          <Link href="/auth/register">
+            <Button>Get Started</Button>
+          </Link>
         </div>
-        <p className="text-sm text-slate-500 dark:text-slate-500 mt-8">
-          Based on Sebastian Marshall&apos;s Work Cycles system
+      </div>
+
+      <div className="mt-20 text-center">
+        <h2 className="text-2xl font-semibold mb-4">Master Your Work Cycles</h2>
+        <p className="max-w-xl mx-auto text-muted-foreground">
+          Transform your productivity with structured work cycles. 
+          Plan, Execute, Review, and Debrief.
         </p>
-      </main>
-    </div>
-  );
+      </div>
+    </main>
+  )
 }
