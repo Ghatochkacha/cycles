@@ -25,10 +25,13 @@ export function useTimer(initialDuration: number, onComplete?: () => void) {
     };
   }, []);
 
+  const prevDuration = useRef(initialDuration);
+
   // Update time if initialDuration changes and we are not running
   useEffect(() => {
-      if (!isRunning) {
+      if (!isRunning && prevDuration.current !== initialDuration) {
           setTimeRemaining(initialDuration);
+          prevDuration.current = initialDuration;
       }
   }, [initialDuration, isRunning]);
 
