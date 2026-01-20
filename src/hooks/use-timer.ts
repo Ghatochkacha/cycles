@@ -4,6 +4,11 @@ export function useTimer(initialDuration: number, onComplete?: () => void) {
   const [timeRemaining, setTimeRemaining] = useState(initialDuration);
   const [isRunning, setIsRunning] = useState(false);
   const workerRef = useRef<Worker | null>(null);
+  const onCompleteRef = useRef(onComplete);
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   useEffect(() => {
     workerRef.current = new Worker('/timer.worker.js');
@@ -12,13 +17,13 @@ export function useTimer(initialDuration: number, onComplete?: () => void) {
         setTimeRemaining(e.data.remaining);
       } else if (e.data.type === 'COMPLETE') {
         setIsRunning(false);
-        if (onComplete) onComplete();
+        if (onCompleteRef.current) onCompleteRef.current();
       }
     };
     return () => {
       workerRef.current?.terminate();
     };
-  }, [onComplete]);
+  }, []);
 
   // Update time if initialDuration changes and we are not running
   useEffect(() => {
