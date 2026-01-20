@@ -12,9 +12,10 @@ interface CycleTimerProps {
   durationMinutes: number
   onComplete: () => void
   label?: string
+  autoStart?: boolean
 }
 
-export function CycleTimer({ durationMinutes, onComplete, label = "Work Cycle" }: CycleTimerProps) {
+export function CycleTimer({ durationMinutes, onComplete, label = "Work Cycle", autoStart = false }: CycleTimerProps) {
   const durationSeconds = durationMinutes * 60
   
   const handleComplete = () => {
@@ -41,7 +42,9 @@ export function CycleTimer({ durationMinutes, onComplete, label = "Work Cycle" }
 
   useEffect(() => {
     requestNotificationPermission()
-    start()
+    if (autoStart) {
+      start()
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) 
 

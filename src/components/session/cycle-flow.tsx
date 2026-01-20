@@ -83,6 +83,7 @@ export function CycleFlow({ session, cycleNumber, initialCycle }: CycleFlowProps
         <CycleTimer 
           durationMinutes={session.cycleDurationMinutes} 
           onComplete={handleWorkComplete} 
+          autoStart={cycleNumber > 1}
         />
       </div>
     )

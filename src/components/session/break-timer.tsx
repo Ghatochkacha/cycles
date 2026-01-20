@@ -13,6 +13,7 @@ export function BreakTimer({ durationMinutes, onComplete }: BreakTimerProps) {
       durationMinutes={durationMinutes} 
       onComplete={onComplete} 
       label="Break Time"
+      autoStart={true}
     />
   )
 }
