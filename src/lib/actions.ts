@@ -4,8 +4,12 @@ import { z } from "zod"
 import { db } from "@/lib/db"
 import bcrypt from "bcryptjs"
 import { RegisterSchema, LoginSchema, SessionPrepareSchema, CyclePlanSchema, CycleReviewSchema, SessionDebriefSchema } from "@/lib/schemas"
-import { signIn, auth } from "@/auth"
+import { signIn, auth, signOut } from "@/auth"
 import { AuthError } from "next-auth"
+
+export async function signOutAction() {
+  await signOut({ redirectTo: "/" })
+}
 
 export async function completeSession(sessionId: string, values: z.infer<typeof SessionDebriefSchema>) {
   const validated = SessionDebriefSchema.safeParse(values)

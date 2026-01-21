@@ -12,6 +12,7 @@ import { QuickStartButton } from "@/components/dashboard/quick-start-button"
 import { SessionCard } from "@/components/dashboard/session-card"
 import { extractKeywords } from "@/lib/analytics"
 import { InsightCard } from "@/components/dashboard/insight-card"
+import { SiteHeader } from "@/components/layout/site-header"
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -111,7 +112,9 @@ export default async function DashboardPage() {
   const lessonKeywords = extractKeywords(lessonTexts)
 
   return (
-     <div className="container mx-auto py-10 space-y-8">
+    <div className="flex flex-col min-h-screen">
+      <SiteHeader />
+      <div className="container mx-auto py-10 space-y-8">
        <div className="flex justify-between items-center">
          <h1 className="text-3xl font-bold">Dashboard</h1>
          <div className="flex items-center gap-4">
@@ -186,6 +189,7 @@ export default async function DashboardPage() {
            ))
          )}
        </div>
+      </div>
      </div>
   )
 }
