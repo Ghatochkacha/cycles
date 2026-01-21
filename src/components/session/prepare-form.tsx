@@ -1,6 +1,6 @@
 "use client"
 
-import { useTransition, useEffect } from "react"
+import { useTransition, useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -21,11 +21,23 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
+import { ArrowLeft, ArrowRight, Check } from "lucide-react"
 
 export function PrepareForm() {
   const [isPending, startTransition] = useTransition()
   const { toast } = useToast()
   const router = useRouter()
+  const [step, setStep] = useState(0)
+
+  const steps = [
+    { title: "Settings", description: "Configure your work cycles." },
+    { title: "Goal", description: "What am I trying to accomplish?" },
+    { title: "Importance", description: "Why is this important and valuable?" },
+    { title: "Completion", description: "How will I know this is complete?" },
+    { title: "Hazards", description: "Any risks or potential distractions?" },
+    { title: "Clarity", description: "Is this concrete or subjective?" },
+    { title: "Noteworthy", description: "Anything else noteworthy?" },
+  ]
 
   const form = useForm<z.infer<typeof SessionPrepareSchema>>({
     resolver: zodResolver(SessionPrepareSchema),
@@ -57,168 +69,245 @@ export function PrepareForm() {
             title: "Session Created",
             description: "Let's get started!",
           })
-          // Redirect to Cycle 1 Plan
           router.push(`/session/${(data as any).sessionId}/work/cycle/1`)
         }
       })
     })
   }
 
+  const nextStep = async () => {
+    let isValid = false
+    
+    // Validate fields for current step
+    switch(step) {
+      case 0:
+        isValid = await form.trigger(["cycleDurationMinutes", "breakDurationMinutes", "totalCycles"])
+        break
+      case 1:
+        isValid = await form.trigger("q1_accomplish")
+        break
+      case 2:
+        isValid = await form.trigger("q2_importance")
+        break
+      case 3:
+        isValid = await form.trigger("q3_completion")
+        break
+      case 4:
+        isValid = await form.trigger("q4_hazards")
+        break
+      case 5:
+        isValid = await form.trigger("q5_concrete")
+        break
+      case 6:
+        isValid = await form.trigger("q6_noteworthy")
+        break
+    }
+
+    if (isValid) {
+      if (step < steps.length - 1) {
+        setStep(step + 1)
+      } else {
+        form.handleSubmit(onSubmit)()
+      }
+    }
+  }
+
+  const prevStep = () => {
+    if (step > 0) setStep(step - 1)
+  }
+
+  // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      // Allow Enter to go next (prevent default form submission unless it's textarea)
+      if (e.key === 'Enter' && !e.shiftKey && !(e.target instanceof HTMLTextAreaElement)) {
         e.preventDefault()
-        form.handleSubmit(onSubmit)()
+        nextStep()
+      }
+      
+      // Cmd+Enter to submit on last step or go next
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+         e.preventDefault()
+         nextStep()
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [form])
+  }, [step]) // Re-bind on step change
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-3xl mx-auto py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Session Settings</CardTitle>
-            <CardDescription>Configure your work cycles.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-6 md:grid-cols-3">
-            <FormField
-              control={form.control}
-              name="cycleDurationMinutes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Cycle Duration (min)</FormLabel>
-                  <FormControl>
-                    <Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="breakDurationMinutes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Break Duration (min)</FormLabel>
-                  <FormControl>
-                     <Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="totalCycles"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Total Cycles</FormLabel>
-                  <FormControl>
-                     <Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </CardContent>
-        </Card>
+      <div className="max-w-2xl mx-auto py-8">
+        <div className="mb-8 flex items-center justify-between">
+           <div className="flex gap-2">
+             {steps.map((_, i) => (
+               <div key={i} className={`h-2 w-8 rounded-full transition-colors ${i <= step ? 'bg-primary' : 'bg-muted'}`} />
+             ))}
+           </div>
+           <span className="text-sm text-muted-foreground">Step {step + 1} of {steps.length}</span>
+        </div>
 
-        <Card>
+        <Card className="min-h-[400px] flex flex-col justify-between">
           <CardHeader>
-            <CardTitle>Preparation</CardTitle>
-            <CardDescription>Answer these questions to set your intention.</CardDescription>
+            <CardTitle>{steps[step].title}</CardTitle>
+            <CardDescription>{steps[step].description}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <FormField
-              control={form.control}
-              name="q1_accomplish"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>1. What am I trying to accomplish?</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Define your main goal..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="q2_importance"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>2. Why is this important and valuable?</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Connect with the purpose..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="q3_completion"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>3. How will I know this is complete?</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Definition of done..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="q4_hazards"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>4. Any risks/hazards? (Optional)</FormLabel>
-                  <FormDescription>Potential distractions, procrastination, etc.</FormDescription>
-                  <FormControl>
-                    <Textarea placeholder="Identify obstacles..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="q5_concrete"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>5. Is this concrete/measurable or subjective/ambiguous?</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Clarify the nature of the task..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-             <FormField
-              control={form.control}
-              name="q6_noteworthy"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>6. Anything else noteworthy? (Optional)</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Additional context..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          
+          <CardContent className="flex-1">
+            {step === 0 && (
+              <div className="grid gap-6 md:grid-cols-3">
+                <FormField
+                  control={form.control}
+                  name="cycleDurationMinutes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Cycle Duration (min)</FormLabel>
+                      <FormControl>
+                        <Input type="number" autoFocus {...field} onChange={e => field.onChange(e.target.valueAsNumber)} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="breakDurationMinutes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Break Duration (min)</FormLabel>
+                      <FormControl>
+                         <Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="totalCycles"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Total Cycles</FormLabel>
+                      <FormControl>
+                         <Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+
+            {step === 1 && (
+               <FormField
+                  control={form.control}
+                  name="q1_accomplish"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Textarea className="min-h-[200px] text-lg p-4" placeholder="I want to..." autoFocus {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+            )}
+
+            {step === 2 && (
+               <FormField
+                  control={form.control}
+                  name="q2_importance"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Textarea className="min-h-[200px] text-lg p-4" placeholder="Because..." autoFocus {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+            )}
+
+            {step === 3 && (
+               <FormField
+                  control={form.control}
+                  name="q3_completion"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Textarea className="min-h-[200px] text-lg p-4" placeholder="I will have..." autoFocus {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+            )}
+
+            {step === 4 && (
+               <FormField
+                  control={form.control}
+                  name="q4_hazards"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Textarea className="min-h-[200px] text-lg p-4" placeholder="Distractions, fatigue, etc..." autoFocus {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+            )}
+
+            {step === 5 && (
+               <FormField
+                  control={form.control}
+                  name="q5_concrete"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Textarea className="min-h-[200px] text-lg p-4" placeholder="It is measurable because..." autoFocus {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+            )}
+
+             {step === 6 && (
+               <FormField
+                  control={form.control}
+                  name="q6_noteworthy"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Textarea className="min-h-[200px] text-lg p-4" placeholder="Also..." autoFocus {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+            )}
+
           </CardContent>
-          <CardFooter>
-            <Button type="submit" size="lg" className="w-full" disabled={isPending}>
-              {isPending ? "Starting Session..." : "Start Session"}
+          <CardFooter className="flex justify-between border-t p-6">
+            <Button type="button" variant="outline" onClick={prevStep} disabled={step === 0}>
+               <ArrowLeft className="mr-2 w-4 h-4" /> Back
+            </Button>
+            
+            <Button type="button" onClick={nextStep} disabled={isPending}>
+               {step === steps.length - 1 ? (
+                 <>
+                   {isPending ? "Starting..." : "Start Session"} <Check className="ml-2 w-4 h-4" />
+                 </>
+               ) : (
+                 <>
+                   Next <ArrowRight className="ml-2 w-4 h-4" />
+                 </>
+               )}
             </Button>
           </CardFooter>
         </Card>
-      </form>
+      </div>
     </Form>
   )
 }

@@ -1,0 +1,30 @@
+
+const STOP_WORDS = new Set([
+  "the", "be", "to", "of", "and", "a", "in", "that", "have", "i", "it", "for", "not", "on", "with", "he", "as", "you", "do", "at", 
+  "this", "but", "his", "by", "from", "they", "we", "say", "her", "she", "or", "an", "will", "my", "one", "all", "would", "there", 
+  "their", "what", "so", "up", "out", "if", "about", "who", "get", "which", "go", "me", "when", "make", "can", "like", "time", "no", 
+  "just", "him", "know", "take", "people", "into", "year", "your", "good", "some", "could", "them", "see", "other", "than", "then", 
+  "now", "look", "only", "come", "its", "over", "think", "also", "back", "after", "use", "two", "how", "our", "work", "first", "well", 
+  "way", "even", "new", "want", "because", "any", "these", "give", "day", "most", "us", "is", "was", "are", "am", "try", "trying"
+])
+
+export function extractKeywords(texts: (string | null | undefined)[]): { word: string; count: number }[] {
+  const wordCounts = new Map<string, number>()
+
+  texts.forEach(text => {
+    if (!text) return
+    // Normalize: lowercase, remove punctuation (except internal apostrophes like can't)
+    const words = text.toLowerCase().replace(/[^\w\s']/g, "").split(/\s+/)
+    
+    words.forEach(word => {
+      if (word.length > 2 && !STOP_WORDS.has(word)) {
+        wordCounts.set(word, (wordCounts.get(word) || 0) + 1)
+      }
+    })
+  })
+
+  return Array.from(wordCounts.entries())
+    .map(([word, count]) => ({ word, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10) // Top 10
+}

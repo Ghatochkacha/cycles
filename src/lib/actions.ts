@@ -159,6 +159,26 @@ export async function quickStartSession() {
   }
 }
 
+export async function deleteSession(sessionId: string) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { error: "Not authenticated" }
+  }
+
+  try {
+    await db.session.delete({
+      where: {
+        id: sessionId,
+        userId: session.user.id // Ensure user owns the session
+      }
+    })
+    return { success: true }
+  } catch (error) {
+    console.error("Failed to delete session:", error)
+    return { error: "Failed to delete session" }
+  }
+}
+
 export async function register(values: z.infer<typeof RegisterSchema>) {
   const validatedFields = RegisterSchema.safeParse(values)
 

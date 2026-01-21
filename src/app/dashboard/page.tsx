@@ -9,6 +9,9 @@ import { EnergyChart } from "@/components/dashboard/energy-chart"
 import { calculateStreak } from "@/lib/stats"
 import { Flame } from "lucide-react"
 import { QuickStartButton } from "@/components/dashboard/quick-start-button"
+import { SessionCard } from "@/components/dashboard/session-card"
+import { extractKeywords } from "@/lib/analytics"
+import { InsightCard } from "@/components/dashboard/insight-card"
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -19,7 +22,7 @@ export default async function DashboardPage() {
     orderBy: { createdAt: 'desc' },
     include: { 
       cycles: {
-        include: { review: true }
+        include: { review: true, plan: true }
       } 
     }
   })
@@ -80,6 +83,33 @@ export default async function DashboardPage() {
 
   const streak = calculateStreak(sessions)
 
+  // Deep Text Analytics
+  const allPlans = sessions.flatMap(s => s.cycles).map(c => c.plan)
+  const allReviews = sessions.flatMap(s => s.cycles).map(c => c.review)
+  
+  // 1. Wins (What do you accomplish?)
+  const winTexts = [
+    ...sessions.map(s => (s.preparationAnswers as any)?.q1_accomplish),
+    ...allPlans.map(p => p?.goal)
+  ]
+  const winKeywords = extractKeywords(winTexts)
+
+  // 2. Blockers (Hazards + Distractions + Bogged Down)
+  const blockerTexts = [
+      ...sessions.map(s => (s.preparationAnswers as any)?.q4_hazards),
+      ...sessions.map(s => (s.debriefAnswers as any)?.q3_bogged),
+      ...allPlans.map(p => p?.hazards),
+      ...allReviews.map(r => r?.distractions)
+  ]
+  const blockerKeywords = extractKeywords(blockerTexts)
+
+  // 3. Lessons (Improvements + Takeaways)
+  const lessonTexts = [
+      ...sessions.map(s => (s.debriefAnswers as any)?.q5_takeaways),
+      ...allReviews.map(r => r?.improvements)
+  ]
+  const lessonKeywords = extractKeywords(lessonTexts)
+
   return (
      <div className="container mx-auto py-10 space-y-8">
        <div className="flex justify-between items-center">
@@ -127,36 +157,53 @@ export default async function DashboardPage() {
        
        <EnergyChart data={chartData} />
 
+import { SessionCard } from "@/components/dashboard/session-card"
+
+export default async function DashboardPage() {
+  const session = await auth()
+  if (!session?.user?.id) redirect("/auth/login")
+  // ... (existing code) ...
+
+  return (
+     <div className="container mx-auto py-10 space-y-8">
+       {/* ... (existing code) ... */}
+       
+       <EnergyChart data={chartData} />
+
+       <div className="space-y-4">
+         <h2 className="text-2xl font-semibold">Deep Insights</h2>
+         <div className="grid gap-4 md:grid-cols-3">
+            <InsightCard 
+                title="Common Wins" 
+                keywords={winKeywords} 
+                colorClass="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
+            />
+            <InsightCard 
+                title="Top Blockers" 
+                keywords={blockerKeywords} 
+                colorClass="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
+            />
+             <InsightCard 
+                title="Recurring Lessons" 
+                keywords={lessonKeywords} 
+                colorClass="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100"
+            />
+         </div>
+       </div>
+
        <div className="space-y-4">
          <h2 className="text-2xl font-semibold">History</h2>
          {sessions.length === 0 ? (
            <p className="text-muted-foreground">No sessions yet. Start one!</p>
          ) : (
            sessions.map(s => (
-            <Card key={s.id}>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                   <div>
-                     <CardTitle className="text-lg">
-                        {formatDistanceToNow(new Date(s.createdAt), { addSuffix: true })}
-                     </CardTitle>
-                     <CardDescription>
-                        {s.cycles.length} / {s.totalCycles} cycles planned
-                     </CardDescription>
-                   </div>
-                   <div className={`px-2 py-1 rounded text-sm capitalize ${
-                       s.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100' :
-                       s.status === 'abandoned' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100' :
-                       'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100'
-                   }`}>
-                       {s.status.replace('_', ' ')}
-                   </div>
-                </div>
-              </CardHeader>
-            </Card>
+            <SessionCard key={s.id} session={s} />
            ))
          )}
        </div>
+     </div>
+  )
+}
      </div>
   )
 }
