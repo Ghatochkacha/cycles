@@ -134,18 +134,16 @@ export default async function DashboardPage() {
              <CardContent className="text-2xl font-bold">{totalSessions}</CardContent>
           </Card>
           <Card>
+             <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Total Cycles</CardTitle></CardHeader>
+             <CardContent className="text-2xl font-bold">{totalCycles}</CardContent>
+          </Card>
+          <Card>
              <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Target Hit Rate</CardTitle></CardHeader>
              <CardContent className="text-2xl font-bold text-green-600 dark:text-green-400">
                {hitRate}%
              </CardContent>
           </Card>
           <Card>
-             <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Golden Hour</CardTitle></CardHeader>
-             <CardContent className="text-2xl font-bold text-amber-600 dark:text-amber-400">
-               {goldenHourText}
-             </CardContent>
-          </Card>
-           <Card>
              <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Session Completion</CardTitle></CardHeader>
              <CardContent className="text-2xl font-bold">
                {sessions.length > 0 
@@ -154,19 +152,6 @@ export default async function DashboardPage() {
              </CardContent>
           </Card>
        </div>
-       
-       <EnergyChart data={chartData} />
-
-import { SessionCard } from "@/components/dashboard/session-card"
-
-export default async function DashboardPage() {
-  const session = await auth()
-  if (!session?.user?.id) redirect("/auth/login")
-  // ... (existing code) ...
-
-  return (
-     <div className="container mx-auto py-10 space-y-8">
-       {/* ... (existing code) ... */}
        
        <EnergyChart data={chartData} />
 
@@ -201,9 +186,6 @@ export default async function DashboardPage() {
            ))
          )}
        </div>
-     </div>
-  )
-}
      </div>
   )
 }
