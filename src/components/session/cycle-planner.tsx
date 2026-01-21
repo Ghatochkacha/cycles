@@ -1,6 +1,6 @@
 "use client"
 
-import { useTransition } from "react"
+import { useTransition, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -59,11 +59,22 @@ export function CyclePlanner({ sessionId, cycleNumber, onComplete }: CyclePlanne
     })
   }
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault()
+        form.handleSubmit(onSubmit)()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [form])
+
   return (
     <Card className="max-w-2xl mx-auto">
       <CardHeader>
         <CardTitle>Plan Cycle {cycleNumber}</CardTitle>
-        <CardDescription>Set your intention for this work block.</CardDescription>
+        <CardDescription>Set your intention for this work block. (Cmd+Enter to start)</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>

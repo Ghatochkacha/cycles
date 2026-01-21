@@ -124,6 +124,41 @@ export async function createSession(values: z.infer<typeof SessionPrepareSchema>
   }
 }
 
+export async function quickStartSession() {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { error: "Not authenticated" }
+  }
+
+  try {
+    const lastSession = await db.session.findFirst({
+      where: { userId: session.user.id },
+      orderBy: { createdAt: 'desc' }
+    })
+
+    if (!lastSession) {
+      return { error: "No previous session found" }
+    }
+
+    const newSession = await db.session.create({
+      data: {
+        userId: session.user.id,
+        startTime: new Date(),
+        cycleDurationMinutes: lastSession.cycleDurationMinutes,
+        breakDurationMinutes: lastSession.breakDurationMinutes,
+        totalCycles: lastSession.totalCycles,
+        status: 'in_progress',
+        preparationAnswers: lastSession.preparationAnswers as any, // Cast JSON to any to avoid type issues
+      }
+    })
+
+    return { success: true, sessionId: newSession.id }
+  } catch (error) {
+    console.error("Failed to quick start session:", error)
+    return { error: "Failed to quick start session" }
+  }
+}
+
 export async function register(values: z.infer<typeof RegisterSchema>) {
   const validatedFields = RegisterSchema.safeParse(values)
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { useTransition } from "react"
+import { useTransition, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -61,11 +61,22 @@ export function DebriefForm({ sessionId }: DebriefFormProps) {
     })
   }
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault()
+        form.handleSubmit(onSubmit)()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [form])
+
   return (
     <Card className="max-w-2xl mx-auto my-10">
       <CardHeader>
         <CardTitle>Session Debrief</CardTitle>
-        <CardDescription>Reflect on your work session.</CardDescription>
+        <CardDescription>Reflect on your work session. (Cmd+Enter to finish)</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>

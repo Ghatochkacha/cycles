@@ -1,6 +1,6 @@
 "use client"
 
-import { useTransition } from "react"
+import { useTransition, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useToast } from "@/hooks/use-toast"
+import confetti from "canvas-confetti"
 
 interface CycleReviewerProps {
   cycleId: string
@@ -51,18 +52,39 @@ export function CycleReviewer({ cycleId, open, onComplete }: CycleReviewerProps)
           })
         }
         if ((data as any)?.success) {
+          if (values.completedTarget) {
+            confetti({
+              particleCount: 100,
+              spread: 70,
+              origin: { y: 0.6 }
+            })
+          }
           onComplete()
         }
       })
     })
   }
+  
+  // Keyboard shortcut: Cmd+Enter or Ctrl+Enter to submit
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        if (open) {
+            e.preventDefault()
+            form.handleSubmit(onSubmit)()
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [open, form])
 
   return (
     <Dialog open={open}>
       <DialogContent className="sm:max-w-[500px]" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>Cycle Review</DialogTitle>
-          <DialogDescription>Review your progress before taking a break.</DialogDescription>
+          <DialogDescription>Review your progress before taking a break. (Cmd+Enter to save)</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
